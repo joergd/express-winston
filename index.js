@@ -145,7 +145,10 @@ function logger(options) {
 
         req._routeWhitelists = {
             req: [],
-            res: [],
+            res: []
+        };
+
+        req._routeBlacklists = {
             body: []
         };
 
@@ -167,7 +170,7 @@ function logger(options) {
             meta.req = filterObject(req, requestWhitelist, options.requestFilter);
             meta.res = filterObject(res, responseWhitelist, options.responseFilter);
 
-            bodyBlacklist = req._routeWhitelists.body || [];
+            bodyBlacklist = req._routeBlacklists.body || [];
 
             if (bodyBlacklist) {
                 meta.req.body = scrubbedObject(req.body, bodyBlacklist);
