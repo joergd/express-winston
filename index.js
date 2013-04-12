@@ -31,11 +31,11 @@ var util = require('util');
 var requestWhitelist = ['url', 'headers', 'method', 'httpVersion', 'originalUrl', 'query'];
 
 /**
- * A default list of properties in the request body that are allowed to be logged.
+ * A default list of properties in the request body that are not allowed to be logged.
  * This will normally be empty here, since it should be done at the route level.
  * @type {Array}
  */
-var bodyWhitelist = [];
+var bodyBlacklist = [];
 
 /**
  * A default list of properties in the response object that are allowed to be logged.
@@ -75,6 +75,22 @@ function filterObject(originalObj, whiteList, initialFilter) {
             obj[propName] = value;
         };
     });
+
+    return obj;
+}
+
+
+function scrubbedObject(originalObj, blackList) {
+
+    var obj = {};
+
+    for (var k in originalObj) {
+        if (originalObj.hasOwnProperty(k)) {
+            if (blackList.indexOf(k) == -1) {
+                obj[k] = originalObj[k];    
+            }
+        }
+    }
 
     return obj;
 }
@@ -143,7 +159,7 @@ function logger(options) {
 
             var meta = {};
 
-            var bodyWhitelist;
+            var bodyBlacklist;
 
             requestWhitelist = requestWhitelist.concat(req._routeWhitelists.req || []);
             responseWhitelist = responseWhitelist.concat(req._routeWhitelists.res || []);
@@ -151,10 +167,10 @@ function logger(options) {
             meta.req = filterObject(req, requestWhitelist, options.requestFilter);
             meta.res = filterObject(res, responseWhitelist, options.responseFilter);
 
-            bodyWhitelist = req._routeWhitelists.body || [];
+            bodyBlacklist = req._routeWhitelists.body || [];
 
-            if (bodyWhitelist) {
-                meta.req.body = filterObject(req.body, bodyWhitelist, options.requestFilter);
+            if (bodyBlacklist) {
+                meta.req.body = scrubbedObject(req.body, bodyBlacklist);
             };
 
             meta.responseTime = responseTime;
@@ -182,7 +198,7 @@ function ensureValidOptions(options) {
 module.exports.errorLogger = errorLogger;
 module.exports.logger = logger;
 module.exports.requestWhitelist = requestWhitelist;
-module.exports.bodyWhitelist = bodyWhitelist;
+module.exports.bodyBlacklist = bodyBlacklist;
 module.exports.responseWhitelist = responseWhitelist;
 module.exports.defaultRequestFilter = defaultRequestFilter;
 module.exports.defaultResponseFilter = defaultResponseFilter;
